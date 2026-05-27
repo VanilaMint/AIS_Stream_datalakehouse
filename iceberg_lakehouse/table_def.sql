@@ -1,3 +1,7 @@
+/*
+This file is for creating data landing tables on apache athena
+REPLACE WITH YOUR OWN BUCKET NAME
+*/
 CREATE TABLE ais_stream_data.landing_position_reports (
     mmsi BIGINT,
     ship_name STRING,
