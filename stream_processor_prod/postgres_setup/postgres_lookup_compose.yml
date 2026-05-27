@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: ais_postgres_lookup
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ais_metadata
+    ports:
+      - "${HOST_POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_lookup_data:/var/lib/postgresql/data
+      - ./ais_metadata_init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - kafkanet
+
+volumes:
+  postgres_lookup_data:
+
+networks:
+  kafkanet:
+    name: ${NETWORK}
+    external: true

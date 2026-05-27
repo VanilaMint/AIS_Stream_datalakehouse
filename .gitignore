@@ -1,0 +1,6 @@
+fodder/
+venv/
+logs/
+stream_processor/
+compose_command.txt
+.env

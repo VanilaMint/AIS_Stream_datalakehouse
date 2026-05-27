@@ -1,0 +1,36 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{
+  "manifestVersion": "2.0.0",
+  "signatureType": "grafana",
+  "signedByOrg": "grafana",
+  "signedByOrgName": "Grafana Labs",
+  "plugin": "grafana-athena-datasource",
+  "version": "3.2.0",
+  "time": 1776353866356,
+  "keyId": "7e4d0c6a708866e7",
+  "files": {
+    "CHANGELOG.md": "0ea3b0182614d88cd3886796fce2e8a4294763f670dd1f62af2300a3f9c8acf4",
+    "dashboards/cur-monitoring.json": "e62ef9bf039781c832a5cba59c92f5faecf7a56d1ff832c7f9ac74ae98ef9fc2",
+    "dashboards/vpc-flow-logs.json": "755ecf7720d2aa9886914d441d6f61314d826d1e5eb87fc90fd27912f2a05a75",
+    "README.md": "0cbae67b76fadd7445156d0b918d8ef40affe765dc2248a27469043fc8ade3d7",
+    "plugin.json": "9e4ce3e9234d57bcb44301b3326f7822ceb0bf151a4670256df4d5f9ebeca917",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "module.js": "89a6d49da2ca06c838ddc5874be00a895bfba7dfc4237e607f1d94af60ef6dee",
+    "img/logo.svg": "076a001186b37ef9e1aefe7ac2002457a6462249790552db146166fff85cb844",
+    "gpx_athena_linux_amd64": "e4bdd6b5bdf99236a7bb3340a00cfd536928d575e853dea46d729b2819bd850d",
+    "go_plugin_build_manifest": "2feddf71d8e4d2bab14b5909e1d168b0a905aa5c29c2c539a9452984622bc5d1",
+    "module.js.map": "33554d118ef901ef0be4b6438fb16c4381e5c0ca3e83d1f3aec237fad59ba88b"
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+
+wsA9BAETCgBtBYJp4QJKCRB+TQxqcIhm50UUAAAAAAAcACBzYWx0QG5vdGF0
+aW9ucy5vcGVucGdwanMub3Jnt+JjnSgfZjto4EhN7CNeaVeS3/cncFRRM/rm
+/j7XxF0WIQTzOyW2kQdOhGNlcPN+TQxqcIhm5wAAAy8CCIuEe0/T9qhjLGu6
+E0XTYs2Zr24E5cn0WUIzifZ9LyeIEQsWxfBIkJKCahmlAdUHFuHhqXuR0D2E
+UeSOYm/hWTxnAgj8dEur2J+VSziV1WDJr497eBmXc3m9zPonHS0OSKlBKZRa
+FZsj30+UcW2ymiqEFy0uELVGMerxSU4cOhLWolNh0w==
+=mj6l
+-----END PGP SIGNATURE-----

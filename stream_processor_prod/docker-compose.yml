@@ -1,0 +1,88 @@
+services:
+  jobmanager:
+    build:
+      context: .
+      dockerfile: build_flink
+    container_name: jobmanager
+    env_file:
+      - ../.env
+    ports:
+      - "${HOST_FLINK_JOB_MANAGER_PORT}:8081"
+    volumes:
+      - ./flink_data:/opt/flink/data
+    command: >
+      bash -c "
+      /opt/flink/bin/jobmanager.sh start &&
+      sleep 10 &&
+      flink run -py /opt/flink/project/orchestrator.py
+      "
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        state.checkpoints.dir: file:///opt/flink/data/checkpoints
+        state.savepoints.dir: file:///opt/flink/data/savepoints
+        jobmanager.rpc.address: jobmanager
+    networks:
+      - kafkanet
+
+  taskmanager:
+    build:
+      context: .
+      dockerfile: build_flink
+    container_name: taskmanager
+    command: taskmanager
+    env_file:
+      - ../.env
+    volumes:
+      - ./flink_data:/opt/flink/data
+    depends_on:
+      - jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.host: taskmanager
+        taskmanager.bind-host: 0.0.0.0
+        taskmanager.numberOfTaskSlots: 12
+        state.checkpoints.dir: file:///opt/flink/data/checkpoints
+        state.savepoints.dir: file:///opt/flink/data/savepoints
+    networks:
+      - kafkanet
+
+  pauser:
+    build:
+      context: .
+      dockerfile: build_flink
+    container_name: pauser_sidecar
+    env_file:
+      - ../.env
+    profiles:
+      - tools
+    command: python3 /opt/flink/project/pause_pipeline.py
+    volumes:
+      - ./flink_data:/opt/flink/data
+    depends_on:
+      - jobmanager
+    networks:
+      - kafkanet
+
+  sql-client:
+    build:
+      context: .
+      dockerfile: build_flink
+    command: bin/sql-client.sh
+    env_file:
+      - ../.env
+    depends_on:
+      - jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+    networks:
+      - kafkanet
+networks:
+  kafkanet:
+    name: ${NETWORK}
+    external: true

@@ -1,0 +1,16 @@
+services:
+  ais-producer:
+    build:
+      context: .                         
+      dockerfile: build_producer  
+    restart: unless-stopped
+    networks:
+      - kafkanet
+    environment:
+      - AIS_API_KEY=${AIS_API_KEY}
+      - KAFKA_BROKER=broker:19092
+      - KAFKA_RAW_TOPIC=${KAFKA_RAW_TOPIC}
+networks:
+  kafkanet:
+    name: ${NETWORK}
+    external: true

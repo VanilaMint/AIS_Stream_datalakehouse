@@ -1,0 +1,162 @@
+services:
+  redis:
+    image: redis/redis-stack:latest
+    container_name: maritime-redis
+    networks:
+      - kafkanet
+    ports:
+      - "${HOST_REDIS_DB_PORT}:6379"   
+      - "${HOST_REDIS_INSIGHT_PORT}:8001" 
+    environment:
+      - REDISEARCH_ARGS=MAXSEARCHRESULTS 50000
+
+  redis-setup:
+    image: redis:alpine
+    container_name: maritime-redis-setup
+    restart: "no"
+    networks:
+      - kafkanet
+    depends_on:
+      - redis
+    environment:
+      - LIVE_SHIP_TOPIC=${KAFKA_PRESENTATION_LIVE_SHIP_TOPIC}
+      - LIVE_BASESTATION_TOPIC=${KAFKA_PRESENTATION_BASESTATION_TOPIC}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for Redis to start..."
+        while ! redis-cli -h maritime-redis -p 6379 ping | grep -q PONG; do
+          echo "Still waiting for Redis..."
+          sleep 2
+        done
+        
+        echo "Redis is up! Creating RediSearch indexes..."
+        
+        redis-cli -h maritime-redis -p 6379 FT.CREATE idx:ships ON JSON PREFIX 1 $${LIVE_SHIP_TOPIC}: SCHEMA \
+          $$.mmsi AS mmsi NUMERIC \
+          $$.ship_name AS ship_name TEXT \
+          $$.country_name AS country_name TAG \
+          $$.latitude AS latitude NUMERIC \
+          $$.longitude AS longitude NUMERIC \
+          $$.speed_over_ground AS speed NUMERIC || true
+        
+        redis-cli -h maritime-redis -p 6379 FT.CREATE idx:basestations ON JSON PREFIX 1 $${LIVE_BASESTATION_TOPIC}: SCHEMA \
+          $$.mmsi AS mmsi NUMERIC \
+          $$.country_name AS country_name TAG \
+          $$.latitude AS latitude NUMERIC \
+          $$.longtitude AS longtitude NUMERIC || true
+        
+        echo "Redis setup complete."
+
+  kafka-connect:
+    build:
+      context: .
+      dockerfile: build_connector
+    container_name: maritime-connect
+    networks:
+      - kafkanet
+    ports:
+      - "8083:8083" 
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "broker:19092" 
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_REST_PORT: "8083"
+      CONNECT_GROUP_ID: "live-dashboard-connect-group"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN"
+      CONNECT_CONFIG_STORAGE_TOPIC: "redis-connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "redis-connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "redis-connect-statuses"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+
+  connector-setup:
+    image: curlimages/curl:latest
+    container_name: maritime-connector-setup
+    restart: "no"
+    networks:
+      - kafkanet
+    depends_on:
+      - kafka-connect
+    environment:
+      - LIVE_SHIP_TOPIC=${KAFKA_PRESENTATION_LIVE_SHIP_TOPIC}
+      - LIVE_BASESTATION_TOPIC=${KAFKA_PRESENTATION_BASESTATION_TOPIC}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for Kafka Connect to start..."
+        while [ $$(curl -s -o /dev/null -w "%{http_code}" http://kafka-connect:8083/connectors) -ne 200 ] ; do 
+          echo "Still waiting..."
+          sleep 5 
+        done
+        
+        echo "Pushing Live Ship Redis Sink configuration..."
+        curl -X PUT http://kafka-connect:8083/connectors/redis-ship-sink/config \
+          -H "Content-Type: application/json" \
+          -d @- <<EOF
+        {
+          "connector.class": "com.redis.kafka.connect.RedisSinkConnector",
+          "tasks.max": "1",
+          "topics": "$${LIVE_SHIP_TOPIC}",
+          "redis.uri": "redis://maritime-redis:6379",
+          "redis.command": "JSONSET",
+          "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "key.converter.schemas.enable": "false",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false",
+          "transforms": "extractKey",
+          "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
+          "transforms.extractKey.field": "mmsi"
+        }
+        EOF
+
+        echo "Pushing Base Station Redis Sink configuration..."
+        curl -X PUT http://kafka-connect:8083/connectors/redis-basestation-sink/config \
+          -H "Content-Type: application/json" \
+          -d @- <<EOF
+        {
+          "connector.class": "com.redis.kafka.connect.RedisSinkConnector",
+          "tasks.max": "1",
+          "topics": "$${LIVE_BASESTATION_TOPIC}",
+          "redis.uri": "redis://maritime-redis:6379",
+          "redis.command": "JSONSET",
+          "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "key.converter.schemas.enable": "false",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false",
+          "transforms": "extractKey",
+          "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
+          "transforms.extractKey.field": "mmsi"
+        }
+        EOF
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: maritime-grafana
+    networks:
+      - kafkanet
+    ports:
+      - "${HOST_GRAFANA_PORT}:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=redis-datasource
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+      - ./grafana_icons:/usr/share/grafana/public/img/custom_icons
+    depends_on:
+      - redis
+
+networks:
+  kafkanet:
+    name: ${NETWORK}
+    external: true

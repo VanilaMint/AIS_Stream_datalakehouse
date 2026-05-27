@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: ais_stream 
+    database: awsdatacatalog    
+    schema: ais_stream_data      
+    tables:
+      - name: landing_position_reports
+      - name: landing_basestation_reports
+      - name: landing_shipstatic_metadata
+
+  - name: state_tables
+    database: awsdatacatalog    
+    schema: ais_stream_data      
+    tables:
+      - name: ship_latest_state
