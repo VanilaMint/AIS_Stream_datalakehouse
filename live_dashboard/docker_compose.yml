@@ -112,6 +112,9 @@ services:
           "key.converter.schemas.enable": "false",
           "value.converter": "org.apache.kafka.connect.json.JsonConverter",
           "value.converter.schemas.enable": "false",
+          "errors.tolerance": "all",
+          "errors.log.enable": "true",
+          "errors.log.include.messages": "true",
           "transforms": "extractKey",
           "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
           "transforms.extractKey.field": "mmsi"
@@ -132,6 +135,9 @@ services:
           "key.converter.schemas.enable": "false",
           "value.converter": "org.apache.kafka.connect.json.JsonConverter",
           "value.converter.schemas.enable": "false",
+          "errors.tolerance": "all",
+          "errors.log.enable": "true",
+          "errors.log.include.messages": "true",
           "transforms": "extractKey",
           "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
           "transforms.extractKey.field": "mmsi"
