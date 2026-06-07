@@ -35,8 +35,8 @@ CREATE CATALOG glue_catalog WITH (
   'catalog-impl'='org.apache.iceberg.aws.glue.GlueCatalog',
   'io-impl'='org.apache.iceberg.aws.s3.S3FileIO',
   'client.region'='{AWS_REGION}',
-  's3.access-key-id'='{AWS_INGESTOR_ACCESS_KEY_ID}',
-  's3.secret-access-key'='{AWS_INGESTOR_SECRET_ACCESS_KEY}'
+  's3.access-key-id'='{AWS_ACCESS_KEY_ID}',
+  's3.secret-access-key'='{AWS_SECRET_ACCESS_KEY}'
 );
 
 INSERT INTO glue_catalog.ais_stream_data.landing_position_reports

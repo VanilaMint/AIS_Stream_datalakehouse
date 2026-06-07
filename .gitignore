@@ -2,5 +2,6 @@ fodder/
 venv/
 logs/
 stream_processor/
+middleware_for_grafana_cloud/
 compose_command.txt
 .env
