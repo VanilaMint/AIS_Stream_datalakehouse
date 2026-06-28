@@ -3,5 +3,8 @@ venv/
 logs/
 stream_processor/
 middleware_for_grafana_cloud/
+live_dashboard/grafana_data
+live_dashboard/grafana_icons
+iceberg_lakehouse_dev\seeds\raw_ports.csv
 compose_command.txt
 .env
