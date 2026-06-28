@@ -117,7 +117,8 @@ services:
           "errors.log.include.messages": "true",
           "transforms": "extractKey",
           "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
-          "transforms.extractKey.field": "mmsi"
+          "transforms.extractKey.field": "mmsi",
+          "redis.key.ttl": "21600"
         }
         EOF
 
@@ -140,7 +141,8 @@ services:
           "errors.log.include.messages": "true",
           "transforms": "extractKey",
           "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField\$$Key",
-          "transforms.extractKey.field": "mmsi"
+          "transforms.extractKey.field": "mmsi",
+          "redis.key.ttl": "21600"
         }
         EOF
 

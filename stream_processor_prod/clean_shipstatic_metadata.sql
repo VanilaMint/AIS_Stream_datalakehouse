@@ -83,7 +83,7 @@ WITH cleaned_shipstatic_metadata AS (
         ais_version,
         PROCTIME() AS proctime
     FROM raw_shipstatic_metadata
-    WHERE mmsi IS NOT NULL AND  mmsi >= 100000000 AND mmsi <= 999999999
+    WHERE mmsi IS NOT NULL AND  mmsi >= 201000000 AND mmsi <= 755999999
 ), parsed_eta AS (
     SELECT *,
         CASE

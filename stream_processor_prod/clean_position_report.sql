@@ -85,7 +85,7 @@ WITH parsed_position_reports AS(
         message_id AS message_id,
         PROCTIME() AS proctime
     FROM raw_position_reports
-    WHERE mmsi IS NOT NULL AND  mmsi >= 100000000 AND mmsi <= 999999999
+    WHERE mmsi IS NOT NULL AND  mmsi >= 201000000 AND mmsi <= 755999999
 ),
 joined_with_lookup_position_reports AS (
     SELECT p.*,

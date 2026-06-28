@@ -68,7 +68,7 @@ WITH raw_table AS (
         valid,
         PROCTIME() AS proctime
     FROM raw_basestation_reports
-    WHERE mmsi IS NOT NULL AND mmsi <> 0
+    WHERE mmsi IS NOT NULL AND mmsi >= 2010000 AND mmsi <= 7559999
 ), joined_with_lookup AS (
     SELECT r.*,
         mcd.country_name,
