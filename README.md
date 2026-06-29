@@ -71,7 +71,7 @@ docker compose --env-file .env -f stream_processor_prod/postgres_setup/postgres_
 ### Step 3: Initialize Topics and Tables
 1. **Kafka Topics:** Run the batch script to initialize the required Kafka topics:
    ```cmd
-   ./create-topics.bat
+   ./broker/create-topics.bat
    ```
 2. **Iceberg Tables:** Access your query engine (e.g., AWS Athena) and execute the SQL table definition codes located in the `iceberg_lakehouse` directory to establish your lakehouse schema.
 
