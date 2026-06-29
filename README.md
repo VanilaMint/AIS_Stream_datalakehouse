@@ -32,6 +32,76 @@ The pipeline is built to handle high-throughput streaming data efficiently, brea
 * **SCD Type 2 Dimension Tracking:** Implements Slowly Changing Dimension (SCD) Type 2 architecture to accurately track and preserve historical changes in ship static metadata over time, ensuring a reliable audit trail.
 * **Optimized Incremental Builds & Watermarking:** Uses custom watermarking logic to handle late-arriving data and leverages dbt's incremental materializations (merge/append) to avoid expensive full-table rebuilds and optimize processing time.
 * **Containerized Environment:** The entire infrastructure (Kafka, Flink, databases) is managed via Docker Compose for easy deployment and teardown.
-## How to Run Locally
+## 🚀 How to Run
 
-WIP
+Follow these steps to deploy the end-to-end AIS telemetry data pipeline on your local machine.
+
+### Prerequisites
+Ensure you have the following installed and configured before proceeding:
+* [Docker](https://www.docker.com/) and Docker Compose
+* Python 3.x (for running dbt)
+* An active [aisstream.io](https://aisstream.io/) API key
+* AWS Credentials with the appropriate permissions (for Flink ingestion and Iceberg storage)
+
+---
+
+### Step 1: Environment Configuration
+1. Rename the provided environment template to create your active environment file:
+   ```bash
+   mv .env.example .env
+   ```
+2. Open the `.env` file and fill in the missing fields. While most configurations are provided by default, you **must** supply:
+   * Your `aisstream.io` API key.
+   * Your AWS Role/Access keys for Flink ingestion.
+3. Create a dedicated Docker network. Ensure the network name matches the one declared in your `.env` file (e.g., `ais_network`):
+   ```bash
+   docker network create <your_network_name_from_env>
+   ```
+
+### Step 2: Start Core Infrastructure
+From the root directory of the project, spin up the Kafka broker and the PostgreSQL lookup database:
+```bash
+# Start Kafka Broker
+docker compose --env-file .env -f broker/broker_compose.yml up -d
+
+# Start PostgreSQL Database
+docker compose --env-file .env -f stream_processor_prod/postgres_setup/postgres_lookup_compose.yml up -d
+```
+
+### Step 3: Initialize Topics and Tables
+1. **Kafka Topics:** Run the batch script to initialize the required Kafka topics:
+   ```cmd
+   ./create-topics.bat
+   ```
+2. **Iceberg Tables:** Access your query engine (e.g., AWS Athena) and execute the SQL table definition codes located in the `iceberg_lakehouse` directory to establish your lakehouse schema.
+
+### Step 4: Start Ingestion & Stream Processing
+Boot up the producer to connect to the external data stream, followed by the stream processor (Apache Flink):
+```bash
+# Start AIS Telemetry Producer
+docker compose --env-file .env -f producer/producer_compose.yml up -d
+
+# Start Stream Processor
+docker compose --env-file .env -f stream_processor_prod/docker-compose.yml up -d
+```
+
+### Step 5: Start Live Data Cache
+Spin up the Redis cache used to serve the real-time telemetry dashboard:
+```bash
+docker compose --env-file .env -f live_dashboard/docker_compose.yml up -d
+```
+
+### Step 6: Build the Data Lakehouse (dbt)
+To run the batch transformations and construct the dimensional models:
+1. Ensure you have the correct dbt adapters installed (e.g., `dbt-core`, `dbt-athena`).
+2. Navigate to the dbt development directory and execute the run command:
+   ```bash
+   cd iceberg_lakehouse_dev
+   dbt run
+   ```
+
+---
+
+### 📊 Visualization Note
+The presentation layer and visual analytics for this project are hosted externally on **Grafana Cloud**. Therefore, the Grafana instance and dashboard JSON models are not included within this repository's local Docker compose setup.
+
